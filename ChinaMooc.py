@@ -143,14 +143,16 @@ class Mooc(object):
 
 
     def run(self):
-        self.get_login_info()                   # 获取登录账号
-        self.driver = webdriver.Chrome()        # 打开浏览器
-        self.driver.get(url=self.mooc_url)      # 打开慕课
+        try:
+            self.get_login_info()                   # 获取登录账号
+            self.driver = webdriver.Chrome()        # 打开浏览器
+            self.driver.get(url=self.mooc_url)      # 打开慕课
 
-        self.login()                            # 登录
-        self.enter_course()                     # 进入课程
-        self.start_learning()                   # 开始学习
-
+            self.login()                            # 登录
+            self.enter_course()                     # 进入课程
+            self.start_learning()                   # 开始学习
+        except:
+            print('网络不稳定，请重试或更换网络')
 
 if __name__ == '__main__':
     # 表示course_id看第一门课程, see_video_or_do_test=0表示看视频，1表示做题
