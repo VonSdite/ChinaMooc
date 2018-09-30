@@ -3,6 +3,7 @@
 # __Email__ : a122691411@gmail.com
 
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from getpass import getpass
 import time
 
@@ -30,7 +31,7 @@ class Mooc(object):
         self.driver.find_element_by_xpath('//*[@id="cnt-box"]/div[2]/form/div/div[1]/a').click()  # 切换账号密码
 
         self.driver.find_element_by_xpath('//*[@id="phoneipt"]').send_keys(self.user_name)        # 输入账号
-        time.sleep(0.1)
+        time.sleep(0.3)
         self.driver.find_element_by_class_name('j-inputtext').send_keys(self.password)            # 输入密码
         self.driver.find_element_by_xpath('//*[@id="submitBtn"]').click()                         # 登录
 
@@ -48,7 +49,7 @@ class Mooc(object):
         if self.see_spooc:
             self.driver.find_element_by_xpath('//*[@id="j-module-tab"]/div/div[2]').click()
 
-        time.sleep(0.5)
+        time.sleep(1.3)
         # 打开课程
         self.driver.find_elements_by_xpath(
             '//*[@id="j-coursewrap"]/div/div[1]/div')[self.course_id].click()
@@ -64,20 +65,26 @@ class Mooc(object):
             except:
                 pass
 
-    def see_video(self):
-        # 看视频
-        videos = self.driver.find_elements_by_css_selector('.f-icon.lsicon.f-fl')
-        video_finish = True
+    def enter_not_learn(self, type):
+        # 进入课件
+        self.driver.find_element_by_xpath('//*[@id="j-courseTabList"]/li[5]').click()
+        time.sleep(1.5)
+        self.open_all_chapters()
+
+        element = self.driver.find_elements_by_css_selector('.f-icon.lsicon.f-fl')
 
         # 找到没看过的视频开始看视频
-        for video in videos:
-            title = video.get_attribute('title')
-            class_ = video.get_attribute('class')
+        for e in element:
+            title = e.get_attribute('title')
+            class_ = e.get_attribute('class')
 
-            if '视频：' in title and 'learned' not in class_:
-                video.click()
-                video_finish = False
-                break
+            if type in title and 'learned' not in class_:
+                e.click()
+                return False
+        return True
+
+    def see_video(self):
+        video_finish = self.enter_not_learn(type='视频')
 
         if not video_finish:
             while True:
@@ -102,57 +109,54 @@ class Mooc(object):
                         self.driver.find_element_by_css_selector('.u-btn.u-btn-default.cont.j-continue').click()
                 except:
                     time.sleep(3)
+        print('[成功]: 视频已全看完(不一定包括直播)')
 
-    # def do_test(self):
-    #     test_finish = False
-    #     while not test_finish:
-    #         # 进入课件
-    #         self.driver.find_element_by_xpath('//*[@id="j-courseTabList"]/li[5]').click()
-    #         time.sleep(1.5)
-    #         self.open_all_chapters()
-    #
-    #         tests = self.driver.find_elements_by_css_selector('.quiz')
-    #         test_finish = True
-    #         for test in tests:
-    #             if 'icon-1' in test.find_elements_by_tag_name('div')[0].get_attribute('class'):
-    #                 test.click()
-    #                 self.driver.find_element_by_css_selector('.u-btn-primary').click()
-    #                 test_finish = False
-    #                 break
-    #
-    #         if test_finish:
-    #             break
-    #
-    #         time.sleep(1)
-    #
-    #         questions = driver.find_elements_by_css_selector('.m-choiceQuestion')
-    #         for question in questions:
-    #             q = question.text.split('\n')
-    #             question_text = q[2]
+    def read_rich_text(self):
+        while not self.enter_not_learn(type='富文本'):
+            time.sleep(0.5)
+        print('[成功]: 富文本已全看完')
+
+    def read_document(self):
+        while not self.enter_not_learn(type='文档'):
+            try:
+                box = self.driver.find_element_by_css_selector('.j-unitctBox.unitctBox')
+                self.driver.execute_script('arguments[0].style.height="100000px"', box)
+                time.sleep(0.5)
+            except:
+                print('[失败]: 查看flash是否被开启QAQ')
+                exit(0)
+
+        print('[成功]: 文档已全看完')
 
     def start_learning(self):
         self.driver.switch_to_window(self.driver.window_handles[0])
+        time.sleep(1)
 
-        # 进入课件
-        self.driver.find_element_by_xpath('//*[@id="j-courseTabList"]/li[5]').click()
-        time.sleep(1.5)
-
-        self.open_all_chapters()                # 展开所有课程
         self.see_video()                        # 看视频
-        # self.do_test()                          # 做题
-
+        self.read_rich_text()                   # 看富文本
+        self.read_document()                    # 看文档
 
     def run(self):
         try:
             self.get_login_info()                   # 获取登录账号
-            self.driver = webdriver.Chrome()        # 打开浏览器
+
+            chromeOpitons = Options()
+            prefs = {
+                "profile.managed_default_content_settings.images": 2,
+                "profile.content_settings.plugin_whitelist.adobe-flash-player": 2,
+                "profile.content_settings.exceptions.plugins.*,*.per_resource.adobe-flash-player": 2,
+
+            }
+            chromeOpitons.add_experimental_option('prefs', prefs)
+            self.driver = webdriver.Chrome(chrome_options=chromeOpitons)        # 打开浏览器
+
             self.driver.get(url=self.mooc_url)      # 打开慕课
 
             self.login()                            # 登录
             self.enter_course()                     # 进入课程
             self.start_learning()                   # 开始学习
         except:
-            print('网络不稳定，请重试或更换网络')
+            print('[失败]: 网络不稳定，请重试或更换网络')
 
 if __name__ == '__main__':
     # 表示course_id看第一门课程, see_video_or_do_test=0表示看视频，1表示做题
