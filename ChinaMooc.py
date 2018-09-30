@@ -35,7 +35,7 @@ class Mooc(object):
         self.driver.find_element_by_xpath('//*[@id="submitBtn"]').click()                         # 登录
 
         self.driver.switch_to_default_content()  # 切换回原来的frame
-        time.sleep(1)
+        time.sleep(1.5)
 
     def enter_course(self):
         # 进入我的课程
