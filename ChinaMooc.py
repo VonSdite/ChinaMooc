@@ -3,7 +3,6 @@
 # __Email__ : a122691411@gmail.com
 
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from getpass import getpass
 import time
 
@@ -118,13 +117,14 @@ class Mooc(object):
 
     def read_document(self):
         while not self.enter_not_learn(type='文档'):
-            try:
-                box = self.driver.find_element_by_css_selector('.j-unitctBox.unitctBox')
-                self.driver.execute_script('arguments[0].style.height="100000px"', box)
-                time.sleep(0.5)
-            except:
-                print('[失败]: 查看flash是否被开启QAQ')
-                exit(0)
+            while True:
+                try:
+                    time.sleep(10)  # 给flash足够的加载时间
+                    box = self.driver.find_element_by_css_selector('.j-unitctBox.unitctBox')
+                    self.driver.execute_script('arguments[0].style.height="100000px"', box)
+                    break
+                except:
+                    pass
 
         print('[成功]: 文档已全看完')
 
@@ -139,16 +139,7 @@ class Mooc(object):
     def run(self):
         try:
             self.get_login_info()                   # 获取登录账号
-
-            chromeOpitons = Options()
-            prefs = {
-                "profile.managed_default_content_settings.images": 2,
-                "profile.content_settings.plugin_whitelist.adobe-flash-player": 2,
-                "profile.content_settings.exceptions.plugins.*,*.per_resource.adobe-flash-player": 2,
-
-            }
-            chromeOpitons.add_experimental_option('prefs', prefs)
-            self.driver = webdriver.Chrome(chrome_options=chromeOpitons)        # 打开浏览器
+            self.driver = webdriver.Chrome()        # 打开浏览器
 
             self.driver.get(url=self.mooc_url)      # 打开慕课
 
