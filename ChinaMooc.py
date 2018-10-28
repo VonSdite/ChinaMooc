@@ -3,22 +3,56 @@
 # __Email__ : a122691411@gmail.com
 
 from selenium import webdriver
+from selenium.webdriver.support.select import Select
 from getpass import getpass
 import time
 
 
 class Mooc(object):
 
-    def __init__(self, course_id=0, see_spooc=False):
+    def __init__(self, course_id=0, see_spooc=True):
         super(Mooc, self).__init__()
         self.mooc_url = 'https://www.icourse163.org/'       # 慕课账号
+        self.flash_open_url = 'chrome://settings/content/siteDetails?site=%s' % self.mooc_url # flash打开的链接
         self.see_spooc = see_spooc                          # 布尔值表示看spooc的课程还是mooc课程
         self.course_id = course_id                          # 看慕课中的第几门课程
 
 
+    def run(self):
+        self.get_login_info()  # 获取登录账号
+        self.driver = webdriver.Chrome()  # 打开浏览器
+        self.allow_flash()  # 允许使用flash
+        try:
+
+            self.driver.get(url=self.mooc_url)      # 打开慕课
+
+            self.login()                            # 登录
+            self.enter_course()                     # 进入课程
+            self.start_learning()                   # 开始学习
+        except:
+            print('[失败]: 网络不稳定，请重试或更换网络')
+
+    def allow_flash(self):
+        def expand_shadow_element(element):
+            shadow_root = self.driver.execute_script('return arguments[0].shadowRoot', element)
+            return shadow_root
+
+        # 打开chrome设置页面
+        self.driver.get(self.flash_open_url)
+
+        # 允许flash
+        root1 = expand_shadow_element(self.driver.find_element_by_css_selector('body > settings-ui'))
+        root2 = expand_shadow_element(root1.find_element_by_css_selector('#main'))
+        root3 = expand_shadow_element(root2.find_element_by_css_selector('settings-basic-page'))
+        root4 = expand_shadow_element(root3.find_element_by_css_selector('#advancedPage > settings-section.expanded > settings-privacy-page'))
+        root5 = expand_shadow_element(root4.find_element_by_css_selector('#pages > settings-subpage > site-details'))
+        root6 = expand_shadow_element(root5.find_element_by_css_selector('#plugins'))
+        root7 = root6.find_element_by_css_selector('#permission')
+        Select(root7).select_by_index(1)
+
     def get_login_info(self):
-        self.user_name = str(input('请输入慕课账号: '))
-        self.password = str(getpass('请输入密码: '))
+        self.user_name = "13138103050"  # str(input('请输入慕课账号: '))
+        self.password = "wang122691411" # str(getpass('请输入密码: '))
 
 
     def login(self):
@@ -26,15 +60,19 @@ class Mooc(object):
             '//*[@id="j-slideTop-slideBox-wrapper"]/div/div/div[3]/div/div/div[3]').click()
         time.sleep(2)
 
-        self.driver.switch_to_frame(self.driver.find_elements_by_tag_name('iframe')[0])           # 切换到登录的frame
-        self.driver.find_element_by_xpath('//*[@id="cnt-box"]/div[2]/form/div/div[1]/a').click()  # 切换账号密码
+        self.driver.switch_to.frame(self.driver.find_elements_by_tag_name('iframe')[0])           # 切换到登录的frame
+
+        # 切换账号密码
+        click_object = self.driver.find_element_by_css_selector('.u-tab.f-cb').find_element_by_css_selector('.tab0')
+        self.driver.execute_script('arguments[0].click()', click_object)
+        time.sleep(0.1)
 
         self.driver.find_element_by_xpath('//*[@id="phoneipt"]').send_keys(self.user_name)        # 输入账号
         time.sleep(0.3)
         self.driver.find_element_by_class_name('j-inputtext').send_keys(self.password)            # 输入密码
         self.driver.find_element_by_xpath('//*[@id="submitBtn"]').click()                         # 登录
 
-        self.driver.switch_to_default_content()  # 切换回原来的frame
+        self.driver.switch_to.default_content()                                                   # 切换回原来的frame
         time.sleep(1.5)
 
     def enter_course(self):
@@ -129,27 +167,15 @@ class Mooc(object):
         print('[成功]: 文档已全看完')
 
     def start_learning(self):
-        self.driver.switch_to_window(self.driver.window_handles[0])
+        self.driver.switch_to.window(self.driver.window_handles[0])
         time.sleep(1)
 
         self.see_video()                        # 看视频
         self.read_rich_text()                   # 看富文本
         self.read_document()                    # 看文档
 
-    def run(self):
-        try:
-            self.get_login_info()                   # 获取登录账号
-            self.driver = webdriver.Chrome()        # 打开浏览器
-
-            self.driver.get(url=self.mooc_url)      # 打开慕课
-
-            self.login()                            # 登录
-            self.enter_course()                     # 进入课程
-            self.start_learning()                   # 开始学习
-        except:
-            print('[失败]: 网络不稳定，请重试或更换网络')
 
 if __name__ == '__main__':
-    # 表示course_id看第一门课程, see_video_or_do_test=0表示看视频，1表示做题
+    # 表示course_id看第一门课程
     mooc = Mooc(course_id=0, see_spooc=True)
     mooc.run()
