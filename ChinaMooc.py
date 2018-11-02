@@ -19,11 +19,10 @@ class Mooc(object):
 
 
     def run(self):
-        self.get_login_info()  # 获取登录账号
-        self.driver = webdriver.Chrome()  # 打开浏览器
-        self.allow_flash()  # 允许使用flash
         try:
-
+            self.get_login_info()  # 获取登录账号
+            self.driver = webdriver.Chrome()  # 打开浏览器
+            self.allow_flash()  # 允许使用flash
             self.driver.get(url=self.mooc_url)      # 打开慕课
 
             self.login()                            # 登录
@@ -51,8 +50,8 @@ class Mooc(object):
         Select(root7).select_by_index(1)
 
     def get_login_info(self):
-        self.user_name = "13138103050"  # str(input('请输入慕课账号: '))
-        self.password = "wang122691411" # str(getpass('请输入密码: '))
+        self.user_name = str(input('请输入慕课账号: '))
+        self.password = str(getpass('请输入密码: '))
 
 
     def login(self):
