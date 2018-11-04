@@ -22,6 +22,7 @@ class Mooc(object):
         try:
             self.get_login_info()  # 获取登录账号
             self.driver = webdriver.Chrome()  # 打开浏览器
+            self.driver.maximize_window()
             self.allow_flash()  # 允许使用flash
             self.driver.get(url=self.mooc_url)      # 打开慕课
 
@@ -106,6 +107,7 @@ class Mooc(object):
         self.driver.find_element_by_xpath('//*[@id="j-courseTabList"]/li[5]').click()
         time.sleep(1.5)
         self.open_all_chapters()
+        time.sleep(2.5)
 
         element = self.driver.find_elements_by_css_selector('.f-icon.lsicon.f-fl')
 
