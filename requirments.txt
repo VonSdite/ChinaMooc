@@ -1,0 +1,5 @@
+PyQt5==5.11.3
+PyQt5-sip==4.19.13
+pywin32==224
+selenium==3.14.0
+requests==2.19.1
